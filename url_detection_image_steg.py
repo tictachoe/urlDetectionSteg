@@ -137,6 +137,11 @@ lsbAsciiStr = ''.join(lsbasciiarray)
 print(lsbAsciiStr)
 print('$Im7$$I' in lsbAsciiStr)
 
-for i in domain:
-    if (i in lsbAsciiStr):
-        url = re.search('(?<=http)(.*)(?= + i +', lsbAsciiStr)
+k = 'NIN'
+url = re.findall("mkf(.*)NIN", lsbAsciiStr)
+
+# for i in domain:
+#     if (i in lsbAsciiStr):
+#         url = re.search('mKf(.*)'+re.escape(k), lsbAsciiStr)
+
+print(url)
