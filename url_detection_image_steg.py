@@ -1,9 +1,9 @@
-import sys
-from PIL import Image, ImageOps
+# Veranja Jayasundera for CSCI401 FALL 22
+# Final Project Prof. Abouali
+# Group 3
+# 11/24/22 done date
+from PIL import Image
 import numpy as np
-import re
-
-#np.set_printoptions(threshold = sys.maxsize)
 
 # opening the text file containing popular domains and reading the data
 domain_file = open("tlds-alpha-by-domain.txt", "r")
@@ -103,5 +103,3 @@ for i in range(len(lsb_ascii_arr)-1):
                     url = url + (lsb_ascii_str[https_index:k]) + lower_domain
                     break
 print(url)
-
-print(lsb_byte_arr)
