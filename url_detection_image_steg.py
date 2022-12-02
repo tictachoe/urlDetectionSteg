@@ -3,6 +3,7 @@
 # Group 3
 # 11/24/22 done date
 from PIL import Image
+from operator import itemgetter
 import numpy as np
 
 # opening the text file containing popular domains and reading the data
@@ -12,7 +13,7 @@ domain = domain.split('\n')
 domain_file.close()
 
 # opening the image and reading data into numpy array
-image = Image.open("sample_640×426.bmp")
+image = Image.open("tempStegImg.png")
 np_img = np.array(image)
 image.close()
 
@@ -67,39 +68,61 @@ lsb_ascii_str = ''.join(lsb_ascii_arr)
 # lsb_ascii_arr = l + lsb_ascii_arr
 # lsb_ascii_str = strings + lsb_ascii_str
 
-url = ''
+url_found = ''
 httpFound = False
 httpsFound = False
 domainFound = False
 http_index = 0
 https_index = 0
+max_domain_len = len(max(domain,key=len))
+distance_to_http = []
+distance_to_https = []
+lower_domains = []
 i = 0
 j = 0
+l = 0
 
-# for loop that iterates through the ascii values checking if http:// or https:// is found
+# for loop that iterates through the ascii values checking if http or https is found
 # if so that position is marked and a bool is set to true. if a . is found while a http method 
 # has been found and domain hasn't been found another for loop iterates through all domain values
-# comparing them against lsb_ascii_str, if a domain is found all the chars between the http method
-# and the domain are grouped into the str url
+# comparing them against lsb_ascii_str and appending the indices to a list along with the distance 
+# between . and http(s)
 for i in range(len(lsb_ascii_arr)-1):
-    if i >=7 and lsb_ascii_str[i-7:i] == 'http://' and (httpFound == False and httpsFound == False):
+    if i >=4 and lsb_ascii_str[i-4:i] == 'http' and (httpFound == False and httpsFound == False):
         httpFound = True
         http_index = i
-        url = url.join(lsb_ascii_arr[i-7:i])
-    if i >=8 and lsb_ascii_str[i-8:i] == 'https://' and (httpFound == False and httpsFound == False):
+        url_found = url_found.join(lsb_ascii_arr[i-4:i])
+    if i >=5 and lsb_ascii_str[i-5:i] == 'https' and (httpFound == False and httpsFound == False):
         httpsFound = True
         https_index = i
-        url = url.join(lsb_ascii_arr[i-8:i])
+        url_found = url_found.join(lsb_ascii_arr[i-5:i])
     if lsb_ascii_arr[i] == '.' and domainFound == False and (httpFound == True or httpsFound == True):
+        period_found = i
         for j in range(len(domain)-1):
-            lower_domain = '.'+domain[j].lower()
-            if lower_domain in lsb_ascii_str:
-                domainFound = True
-                k = lsb_ascii_str.find(lower_domain)
-                if httpFound == True:
-                    url = url + (lsb_ascii_str[http_index:k]) + lower_domain
-                    break
-                if httpsFound == True:
-                    url = url + (lsb_ascii_str[https_index:k]) + lower_domain
-                    break
-print(url)
+            if httpFound == True and domain[j] in lsb_ascii_str:
+                distance_to_http.append([period_found - http_index, period_found])
+                break
+            elif httpsFound == True and domain[j] in lsb_ascii_str:
+                distance_to_https.append([period_found - https_index, period_found])
+                break
+
+# distance_to_http lets us sort out periods followed by domains not close to the url
+distance_to_http = sorted(distance_to_http,key=itemgetter(0))
+
+# another for loop iterating through domain and checking if the domain is in the
+# slice of the string from period_found to period_found + length of longest domain
+# if a domain is found it is appended into another list from which the domain is 
+# chosen. the url is made up of http(s) + everything in between + domain found
+for u in domain:
+    if '.'+u.lower() in lsb_ascii_str[distance_to_http[0][1]:distance_to_http[0][1]+max_domain_len]:
+        lower_domains.append('.'+u.lower())
+lower_domains = sorted(lower_domains,key=len)
+lower_domain = lower_domains[1]
+domainFound = True
+k = lsb_ascii_str.find(lower_domain)
+if httpFound == True:
+    url_found = url_found + (lsb_ascii_str[http_index:k]) + lower_domain    
+elif httpsFound == True:
+    url_found = url_found + (lsb_ascii_str[https_index:k]) + lower_domain
+
+print(url_found)
